@@ -41,7 +41,7 @@ while valido== False:
    #comprobar si es comando
    if bytes[0]==6:
       #si OBC 2 encontro la foto que pedi
-      #1 es sí, 0 es no
+      #1 es si, 0 es no
       if bytes[1]==1:
          #calcula checksum del comando recibido
          check_sum=sum(bytes[:15])&0xFF
@@ -53,7 +53,6 @@ while valido== False:
          if check_sum==bytes[15]:
             #convertir numero de paquetes
             total=math.ceil(((bytes[2]<<24)+(bytes[3]<<16)+(bytes[4]<<8)+(bytes[5]))/14)
-            print("total de paquetes: ", total)
             valido=True
          else:
             sendData(0x03,send_list)
@@ -66,8 +65,9 @@ lectura=0
 mal_check=0
 #no se reconocio comando
 no_coman=0
+print("total de paquetes: ", total)
 #lista para almacenar los paquetes
-image = [1]*(total*14)
+image = [1]*(int(total)*14)
 inicioT=time.time()
 #pedir primer paquete
 send_list=llenar_comando(cont,send_list)
@@ -84,28 +84,33 @@ while valido== False:
       #si checksum es igual a 06
       if check_sum==6:
          check_sum=7
-         print("se cambio el check sum a 07")
+         #print("se cambio el check sum a 07")
       #check sum es correcto?
       if check_sum==bytes[15]:
-         cont+=1
-         for i in range(14)
-            image[(cont*14)+i]=bytes[1+i]
+              #print(cont)
          if cont>=total:
             valido=True
          else:
+            for i in range(14):
+               image[(cont*14)+i]=bytes[1+i]
+            cont+=1
             send_list=llenar_comando(cont,send_list)
             sendData(0x03,send_list)
+            #print(send_list)
       else:
          mal_check+=1
          sendData(0x03,send_list)
+         print("check malo",send_list)
    else:
       no_coman+=1
+      print(bytes)
 finT=time.time()
 print("fin: ",finT-inicioT)
 print("lectura: ",lectura)
 print("mal checksum: ",mal_check)
 print("no se reconoce comando: ",no_coman)
 f=open("image.jpg","wb")
-f.write(image)
+Aarray=bytearray(image)
+f.write(Aarray)
 f.close()
 print("FIN")
