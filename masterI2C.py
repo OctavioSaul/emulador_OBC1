@@ -7,26 +7,28 @@ bus = smbus.SMBus(1)
 time.sleep(1)
 
 def sendData(slaveAddress, data):
-        #pasar a binario
-        #intsOfData = list(map(ord, data))
-    bus.write_i2c_block_data(slaveAddress, 0xFF,data)
+   bus.write_i2c_block_data(slaveAddress, 0xFF,data)
 def readData(slaveAddress,reg):
-    bytes=bus.read_i2c_block_data(slaveAddress,reg,16)
-    return bytes
+   bytes=bus.read_i2c_block_data(slaveAddress,reg,16)
+   return bytes
 def llenar_comando(cont,send_list):
-    #tipo comando
-    send_list[0]=4
-    #llenar cero espacios vacios
-    for i in range(4, 14):
+   #tipo comando(4 para indicar que paquete de la imagen se pide)
+   send_list[0]=4
+   #llenar cero espacios vacios
+   for i in range(4, 14):
       send_list[i]=0
-    #numero paquete a pedir
-    send_list[1]=(cont & (0xFF<<16))>>16
-    send_list[2]=(cont & (0xFF<<8))>>8
-    send_list[3]=(cont & (0xFF))
-    send_list[14]=sum(send_list[:14])&0xFF
-    return send_list
+   #numero paquete a pedir
+   send_list[1]=(cont & (0xFF<<16))>>16
+   send_list[2]=(cont & (0xFF<<8))>>8
+   send_list[3]=(cont & (0xFF))
+   send_list[14]=sum(send_list[:14])&0xFF
+   #regresa el comando listo para enviar
+   return send_list
+#condicion termino whiles
 valido=False
+#checksum comandos recibidos
 check_sum=0
+#contador paquetes recibidos 
 total=0
 print("inicio")
 #comando pedir foto a OBC2
@@ -36,14 +38,16 @@ while valido== False:
    #leer tamano foto
    bytes=readData(0x03, 0xFF)
    time.sleep(0.01)
-  #comprobar si es comando
+   #comprobar si es comando
    if bytes[0]==6:
-      #si encontro la foto
+      #si OBC 2 encontro la foto que pedi
+      #1 es sí, 0 es no
       if bytes[1]==1:
+         #calcula checksum del comando recibido
          check_sum=sum(bytes[:15])&0xFF
-         #si checksum es igual a 06
-         if check_sum==06:
-            check_sum=07
+         #si checksum es igual a 6
+         if check_sum==6:
+            check_sum=7
             print("se cambio el check sum a 07")
          #comprobar checksum
          if check_sum==bytes[15]:
@@ -62,6 +66,8 @@ lectura=0
 mal_check=0
 #no se reconocio comando
 no_coman=0
+#lista para almacenar los paquetes
+image = [1]*(total*14)
 inicioT=time.time()
 #pedir primer paquete
 send_list=llenar_comando(cont,send_list)
@@ -76,12 +82,14 @@ while valido== False:
    if bytes[0]==6:
       check_sum=sum(bytes[:15])&0xFF
       #si checksum es igual a 06
-      if check_sum==06:
-         check_sum=07
+      if check_sum==6:
+         check_sum=7
          print("se cambio el check sum a 07")
       #check sum es correcto?
       if check_sum==bytes[15]:
          cont+=1
+         for i in range(14)
+            image[(cont*14)+i]=bytes[1+i]
          if cont>=total:
             valido=True
          else:
@@ -97,4 +105,7 @@ print("fin: ",finT-inicioT)
 print("lectura: ",lectura)
 print("mal checksum: ",mal_check)
 print("no se reconoce comando: ",no_coman)
-
+f=open("image.jpg","wb")
+f.write(image)
+f.close()
+print("FIN")
