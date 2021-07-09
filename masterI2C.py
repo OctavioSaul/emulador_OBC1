@@ -35,12 +35,16 @@ sendData(0x03,send_list)
 while valido== False:
    #leer tamano foto
    bytes=readData(0x03, 0xFF)
-  # time.sleep(0.001)
+   time.sleep(0.01)
   #comprobar si es comando
    if bytes[0]==6:
       #si encontro la foto
       if bytes[1]==1:
          check_sum=sum(bytes[:15])&0xFF
+         #si checksum es igual a 06
+         if check_sum==06:
+            check_sum=07
+            print("se cambio el check sum a 07")
          #comprobar checksum
          if check_sum==bytes[15]:
             #convertir numero de paquetes
@@ -50,7 +54,14 @@ while valido== False:
          else:
             sendData(0x03,send_list)
 valido=False
+#contador paquetes
 cont=0
+#contador lectura 
+lectura=0
+#contador checksum incorrecto
+mal_check=0
+#no se reconocio comando
+no_coman=0
 inicioT=time.time()
 #pedir primer paquete
 send_list=llenar_comando(cont,send_list)
@@ -59,10 +70,15 @@ print("enviando paquetes...")
 while valido== False:
    #leer paquete
    bytes=readData(0x03, 0xFF)
+   lectura+=1
    #time.sleep(0.001)
    #es un comando?
    if bytes[0]==6:
       check_sum=sum(bytes[:15])&0xFF
+      #si checksum es igual a 06
+      if check_sum==06:
+         check_sum=07
+         print("se cambio el check sum a 07")
       #check sum es correcto?
       if check_sum==bytes[15]:
          cont+=1
@@ -72,7 +88,13 @@ while valido== False:
             send_list=llenar_comando(cont,send_list)
             sendData(0x03,send_list)
       else:
+         mal_check+=1
          sendData(0x03,send_list)
+   else:
+      no_coman+=1
 finT=time.time()
 print("fin: ",finT-inicioT)
+print("lectura: ",lectura)
+print("mal checksum: ",mal_check)
+print("no se reconoce comando: ",no_coman)
 
