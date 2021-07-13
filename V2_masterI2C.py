@@ -7,7 +7,7 @@ bus = smbus.SMBus(1)
 time.sleep(1)
 
 def sendData(slaveAddress, data):
-       bus.write_i2c_block_data(slaveAddress, 0xFF,data)
+   bus.write_i2c_block_data(slaveAddress, 0xFF,data)
 
 def readData(slaveAddress,reg):
    bytes=bus.read_i2c_block_data(slaveAddress,reg,16)
@@ -42,7 +42,6 @@ def pedir_foto():
    while valido== False:
       #leer tamano foto
       bytes=readData(0x03, 0xFF)
-      time.sleep(0.01)
       #comprobar si es comando
       if bytes[0]==6:
          #si OBC 2 encontro la foto que pedi
@@ -53,11 +52,10 @@ def pedir_foto():
             #si checksum es igual a 6
             if check_sum==6:
                check_sum=7
-               #print("se cambio el check sum a 07")
             #comprobar checksum
             if check_sum==bytes[15]:
                #convertir numero de paquetes
-               total=math.ceil(((bytes[2]<<24)+(bytes[3]<<16)+(bytes[4]<<8)+(bytes[5]))/14)
+               total=math.ceil(((bytes[2]<<24)+(bytes[3]<<16)+(bytes[4]<<8)+(bytes[5]))/15)
                return total
             else:
                sendData(0x03,send_list)
@@ -68,66 +66,58 @@ class Stepper:
       self.cont = 0 #contador paquetes
       self.lectura = 0 #contador lectura 
       self.mal_check = 0 #contador checksum incorrecto
-      self.no_cmd = 0 #no se reconocio comando
-      self.image = [1]*(int(img_size)*14) #lista para almacenar los paquetes
+      self.image = [0]*(int(img_size)*15) #lista para almacenar los paquetes
       self.send_list = [0 for i in range(14)]
       print("total de paquetes: ", img_size)
 
    def next(self):
       if self.cont >= self.img_size:
+         print("Finito")
          return False
       llenar_comando(self.cont,self.send_list)
       sendData(0x03,self.send_list)
-      #print(self.send_list)
+      #print("Pedi: ", self.send_list, self.cont)
       return True
 
    def read(self):
+      #leer info de OBC2
       bytes=readData(0x03, 0xFF)
       self.lectura+=1
-      if bytes[0]==6:
-         check_sum=sum(bytes[:15])&0xFF
-         #si checksum es igual a 06
-         if check_sum==6:
-            check_sum=7
-            #print("se cambio el check sum a 07")
-         #check sum es correcto?
-         if check_sum==bytes[15]:
-            if self.cont >= self.img_size:
-               print("Finito")
-            else:
-               for i in range(14):
-                  self.image[(self.cont*14)+i]=bytes[1+i]
-               #print(bytes)
-               #print(self.cont)
-               self.cont+=1
-               return True
-         else:
-            self.mal_check+=1
-            #print("check malo",bytes)
-            return False
+      #calcular checksum
+      check_sum=sum(bytes[:15])
+      #aumento el numero de paquete actual
+      check_sum+=self.cont
+      #mantenemos ultimos 8 bits
+      check_sum&=0xFF
+      #si es i
+      if check_sum==bytes[0]:
+         check_sum+=1
+         check_sum&=0xFF
+      #check sum es correcto?
+      if check_sum==bytes[15]:
+         #guardar datos para esportar la imagen
+         for i in range(15):
+            self.image[(self.cont*15)+i]=bytes[i]
+         #print("Correcto: ", bytes, self.cont)
+         self.cont+=1
       else:
-         self.no_cmd+=1
-         #print(bytes)
-         return False
-
+         #print("Incorrecto: ", bytes, self.cont)
+         self.mal_check+=1
 
 def main():
    inicioT=time.time()
    print("Recibiendo paquetes...")
    total = pedir_foto()
    stpr = Stepper(total)
+   #stpr.read()
    while stpr.next():
-         #time.sleep(0.01)
-      while not stpr.read():
-         5
-         #time.sleep(0.003)
-         #print(".", end="")
+      time.sleep(0.001)
+      stpr.read()
    finT=time.time()
    print("fin: ",finT-inicioT)
    print("lectura: ",stpr.lectura)
    print("mal checksum: ",stpr.mal_check)
-   print("no se reconoce comando: ",stpr.no_cmd)
-   f=open("image4.jpg","wb")
+   f=open("image2.jpg","wb")
    Aarray=bytearray(stpr.image)
    f.write(Aarray)
    f.close()
