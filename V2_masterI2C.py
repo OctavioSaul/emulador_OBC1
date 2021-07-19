@@ -95,7 +95,7 @@ class Stepper:
          check_sum&=0xFF
       #check sum es correcto?
       if check_sum==bytes[15]:
-         #guardar datos para esportar la imagen
+         #guardar datos para exportar la imagen
          for i in range(15):
             self.image[(self.cont*15)+i]=bytes[i]
          #print("Correcto: ", bytes, self.cont)
@@ -110,14 +110,39 @@ def main():
    total = pedir_foto()
    stpr = Stepper(total)
    #stpr.read()
+   total_time = 0
+   event_count = 0
+   min_time = 30
+   max_time = 0
    while stpr.next():
-      time.sleep(0.001)
+      time.sleep(0.003)
+      start = time.time()
       stpr.read()
+      end = time.time()
+      elapsed = end-start
+      total_time += elapsed
+      event_count += 1
+      if elapsed < min_time:
+         min_time = elapsed
+      if elapsed > max_time:
+         max_time = elapsed
+   start = time.time()
+   checksum_image=sum(stpr.image)
+   checksum_image&=0xFF
+   end = time.time()
+   print("tiempo checksum imagen:",end-start)
+   print("checksum imagen:",checksum_image)
+   print("Event stats:")
+   print("Event count: {}".format(event_count))
+   print("Min time: {} us".format(1000000*min_time))
+   print("Max time: {} us".format(1000000*max_time))
+   print("Avg. time: {} us".format(1000000*total_time/event_count))
+
    finT=time.time()
    print("fin: ",finT-inicioT)
    print("lectura: ",stpr.lectura)
    print("mal checksum: ",stpr.mal_check)
-   f=open("image2.jpg","wb")
+   f=open("image10.jpg","wb")
    Aarray=bytearray(stpr.image)
    f.write(Aarray)
    f.close()
