@@ -149,13 +149,11 @@ def main():
       if elapsed > max_time:
          max_time = elapsed
    start = time.time()
-   checksum_image=sum(stpr.image)
-   checksum_image&=0xFF
-   end = time.time()
    checksum_list=skipped_checksum(0,0,image[:total])
+   end = time.time()
+   print("tiempo lista checksum imagen:",end-start)
    print("lista checksum: ", checksum_list)
-   print("tiempo checksum imagen:",end-start)
-   print("checksum imagen:",checksum_image)
+
    print("Event stats:")
    print("Event count: {}".format(event_count))
    print("Min time: {} us".format(1000000*min_time))
