@@ -1,9 +1,9 @@
-import smbus
+#import smbus
 import time
 import math
 from struct import pack, unpack
 
-bus = smbus.SMBus(1)
+#bus = smbus.SMBus(1)
 time.sleep(1)
 
 def sendData(slaveAddress, data):
@@ -12,6 +12,22 @@ def sendData(slaveAddress, data):
 def readData(slaveAddress,reg):
    bytes=bus.read_i2c_block_data(slaveAddress,reg,16)
    return bytes
+
+def comando_checksum(offset, level,send_list):
+   #comando para pedir checksum
+   send_list[0]=5
+   #numero de offset
+   send_list[1]=(offset & (0xFF<<16))>>16
+   send_list[2]=(offset & (0xFF<<8))>>8
+   send_list[3]=(offset & (0xFF))
+   #nivel
+   send_list[4]=(level & (0xFF))
+   #llenar cero espacios vacios
+   for i in range(5, 13):
+      send_list[i]=0
+   #checksum
+   send_list[13]=sum(send_list[:13])&0xFF
+   sendData(0x03,send_list)
 
 def llenar_comando(cont,send_list):
    #tipo comando(4 para indicar que paquete de la imagen se pide)
@@ -47,8 +63,25 @@ def skipped_checksum(offset,level,image):
          r_i+=1
       c_i+=separa
          
-         
-         
+def get_skipped_checksum(offset,level,send_list):
+   while True:
+      #leer checksum de OBC1
+      bytes=readData(0x03, 0xFF)
+      #calcular checksum
+      check_sum=sum(bytes[:15])
+      #mantenemos ultimos 8 bits
+      check_sum&=0xFF
+      #si es igual al inicio de la cadena
+      if check_sum==bytes[0]:
+         check_sum+=1
+         check_sum&=0xFF
+      #check sum es correcto?
+      if check_sum==bytes[15]:
+         return bytes[:15]
+      else:
+         comando_checksum(offset,level,send_list)
+
+  
 def pedir_foto():
    #condicion termino whiles
    valido=False
@@ -125,6 +158,47 @@ class Stepper:
       else:
          #print("Incorrecto: ", bytes, self.cont)
          self.mal_check+=1
+   
+   def correct_error(self,offset,level):
+      print("offset: ",offset,"  level: ",level)
+      #pedir checksum a OBC1
+      comando_checksum(offset,level,self.send_list)
+      #separación entre paquetes
+      separa=15**(level+1)
+      #separación entre paquetes del mismo tipo
+      separa2=15**(level+2)
+      #calcular checksum paquetes del mismo tipo
+      own=skipped_checksum(offset,level,self.image[:self.img_size])
+      #leer checksum de OBC1
+      other=get_skipped_checksum(offset,level,self.send_list)
+      for i in range(15):
+         if own[i]!=other[i]:
+            if (offset*15)+(i*separa)+separa2 >= len(image):
+               #pedir paquete erroneo (offset+i*15**level)
+               llenar_comando(offset+i*15**level,self.send_list)
+               sendData(0x03,self.send_list)
+               while True:
+                  #leer nuevo paquete
+                  bytes=readData(0x03, 0xFF)
+                  #calcular checksum
+                  check_sum=sum(bytes[:15])
+                  #mantenemos ultimos 8 bits
+                  check_sum&=0xFF
+                  #si es igual al inicio
+                  if check_sum==bytes[0]:
+                     check_sum+=1
+                     check_sum&=0xFF
+                  #check sum es correcto?
+                  if check_sum==bytes[15]:
+                     #guardar datos para exportar la imagen
+                     for j in range(15):
+                        self.image[((offset*15)+(i*separa))+j]=bytes[j]
+                     return
+                  else: 
+                     sendData(0x03,self.send_list)           
+            else:
+               self.correct_error(offset+i*15**level,level+1)
+   return    
 
 def main():
    inicioT=time.time()
@@ -149,11 +223,9 @@ def main():
       if elapsed > max_time:
          max_time = elapsed
    start = time.time()
-   checksum_list=skipped_checksum(0,0,image[:total])
+   stpr.correct_error(0,0)
    end = time.time()
    print("tiempo lista checksum imagen:",end-start)
-   print("lista checksum: ", checksum_list)
-
    print("Event stats:")
    print("Event count: {}".format(event_count))
    print("Min time: {} us".format(1000000*min_time))
@@ -173,3 +245,8 @@ def main():
 main()
 #total = pedir_foto()
 #s = Stepper(total)
+#image =list(open("test2.jpg","rb").read())
+#l = [i&0xFF for i in range(1001)]
+#print(image[:100])
+#print("-----------------------")
+#print(skipped_checksum(0,0,image))
