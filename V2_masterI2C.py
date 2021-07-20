@@ -27,6 +27,28 @@ def llenar_comando(cont,send_list):
    #regresa el comando listo para enviar
    return send_list
 
+def skipped_checksum(offset,level,image):
+   checksum_list= [0]*15  
+   c_i=15*offset #index contenido 
+   r_i=0 #index result
+   separa=(pow(15,level)-1)*15
+   size=len(image)
+   while True:
+      for i in range(15):
+         if c_i < size:
+            checksum_list[r_i]+=image[c_i]
+            checksum_list[r_i]&=0xFF
+            c_i+=1
+         else:
+            return checksum_list
+      if r_i >= 14:
+         r_i*=0
+      else: 
+         r_i+=1
+      c_i+=separa
+         
+         
+         
 def pedir_foto():
    #condicion termino whiles
    valido=False
@@ -115,7 +137,7 @@ def main():
    min_time = 30
    max_time = 0
    while stpr.next():
-      time.sleep(0.003)
+      time.sleep(0.001)
       start = time.time()
       stpr.read()
       end = time.time()
@@ -130,6 +152,8 @@ def main():
    checksum_image=sum(stpr.image)
    checksum_image&=0xFF
    end = time.time()
+   checksum_list=skipped_checksum(0,0,image[:total])
+   print("lista checksum: ", checksum_list)
    print("tiempo checksum imagen:",end-start)
    print("checksum imagen:",checksum_image)
    print("Event stats:")
