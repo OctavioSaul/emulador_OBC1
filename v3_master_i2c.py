@@ -4,7 +4,7 @@ import math
 
 SLAVE_ADDRESS = 0x03
 FILL_REGISTER = 0xFF
-PHOTO_NUMBER = 14
+PHOTO_NUMBER = 15
 
 bus = smbus.SMBus(1)
 time.sleep(1)
@@ -172,13 +172,14 @@ class Stepper:
       print("Calculated skipped checksum: ", own)
       #leer checksum de OBC1
       other=get_skipped_checksum(offset,level)
-      for i in range(3):
-         print("Asking for skipped checksum offset: {}, level: {}, for the {}th time".format(offset, level, i+2))
-         send_data(command_checksum(offset, level))
-         other=get_skipped_checksum(offset,level)
-         if other:
-            print("Got it")
-            break
+      if not other:
+         for i in range(3):
+            print("Asking for skipped checksum offset: {}, level: {}, for the {}th time".format(offset, level, i+2))
+            send_data(command_checksum(offset, level))
+            other=get_skipped_checksum(offset,level)
+            if other:
+               print("Got it")
+               break
 
       if not other:
          print("skipped checksum not returned")
