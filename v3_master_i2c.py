@@ -4,7 +4,7 @@ import math
 
 SLAVE_ADDRESS = 0x03
 FILL_REGISTER = 0xFF
-PHOTO_NUMBER = 12
+PHOTO_NUMBER = 13
 
 bus = smbus.SMBus(1)
 time.sleep(1)
@@ -181,7 +181,7 @@ class Stepper:
 
       for i in range(15):
          if own[i]!=other[i]:
-            if (offset*15)+(i*separa)+separa2 >= len(image):
+            if (offset*15)+(i*separa)+separa2 >= self.img_size:
                #pedir paquete erroneo (offset+i*15**level)
                print("Asking for packet {}".format(offset+i*15**level))
                send_data(command_packet(offset+i*15**level))
