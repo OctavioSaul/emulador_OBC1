@@ -147,10 +147,11 @@ class Stepper:
       return True
 
    def read(self):
-      reply = get_reply_timed(0.001, 0.05, lambda l: valid_packet(l, self.cont))
+      reply = get_reply_reps(0.001, 2, lambda l: valid_packet(l, self.cont))
       self.lectura += 1
       if reply:
          #guardar datos para exportar la imagen
+         print(self.cont)
          for i in range(15):
             self.image[(self.cont*15)+i]=reply[i]
       else:
