@@ -123,21 +123,22 @@ def pedir_foto():
       reply = get_reply_timed(0.001, 30, valid_reply)
       if reply:
          #convertir numero de paquetes
-         total=math.ceil(((reply[2]<<24)+(reply[3]<<16)+(reply[4]<<8)+(reply[5]))/15)
+         total=(reply[2]<<24)+(reply[3]<<16)+(reply[4]<<8)+(reply[5])
          return total
             
 class Stepper:
    def __init__(self, img_size):
       self.img_size = img_size
+      self.img_packets = math.ceil(img_size/15)
       self.cont = 0 #contador paquetes
       self.lectura = 0 #contador lectura 
       self.no_reply = 0 #contador checksum incorrecto
-      self.image = [0]*(int(img_size)*15) #lista para almacenar los paquetes
+      self.image = [0]*(self.img_packets*15) #lista para almacenar los paquetes
       self.print_counter = 0
       print("total de paquetes: ", img_size)
 
    def next(self):
-      if self.cont >= self.img_size:
+      if self.cont >= self.img_packets:
          print("Finito")
          return False
       send_data(command_packet(self.cont))
@@ -252,9 +253,7 @@ def main():
    print("FIN")
    
 main()
-#total = pedir_foto()
-#s = Stepper(total)
-#image =list(open("test2.jpg","rb").read())
+#image =list(open("image14.jpg","rb").read())
 #l = [i&0xFF for i in range(1001)]
 #print(image[:100])
 #print("-----------------------")
