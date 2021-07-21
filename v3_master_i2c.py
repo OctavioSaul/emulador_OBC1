@@ -20,19 +20,15 @@ def get_reply_reps(time_between, max_reps, validator):
       time.sleep(time_between)
       received = read_data()
       if validator(received):
-         print("Valid: {}".format(received))
          return received
-      print("Invalid: {}".format(received))
    return []
 
 def get_reply_timed(time_between, max_time, validator):
    start = time.time()
    while time.time() - start < max_time:
       time.sleep(time_between)
-      print(".", end="")
       received = read_data()
       if validator(received):
-         print("")
          return received
    return []
 
@@ -156,7 +152,6 @@ class Stepper:
             self.image[(self.cont*15)+i]=reply[i]
          self.cont += 1
       else:
-         print("no reply")
          self.no_reply += 1
    
    def correct_error(self,offset,level):
