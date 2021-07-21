@@ -155,6 +155,7 @@ class Stepper:
          for i in range(15):
             self.image[(self.cont*15)+i]=reply[i]
       else:
+         print("no reply")
          self.no_reply += 1
    
    def correct_error(self,offset,level):
