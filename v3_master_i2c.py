@@ -149,6 +149,7 @@ class Stepper:
          print(self.cont)
          for i in range(15):
             self.image[(self.cont*15)+i]=reply[i]
+         self.cont += 1
       else:
          print("no reply")
          self.no_reply += 1
