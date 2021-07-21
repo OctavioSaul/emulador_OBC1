@@ -39,7 +39,7 @@ def command_photo():
    to_send = [0]*14
    to_send[0] = 3
    to_send[13] = checksum(to_send[:13]) 
-   return = to_send
+   return to_send
 
 def command_checksum(offset, level):
    to_send = [0]*14
@@ -55,7 +55,12 @@ def command_checksum(offset, level):
    return to_send
 
 def command_packet(n):
-   to_send = [0]*14
+   to_send = [0]*14f=open("image{}.jpg".format(PHOTO_NUMBER),"wb")
+   Aarray=bytearray(stpr.image)
+   f.write(Aarray)
+   f.close()
+
+
    #tipo comando(4 para indicar que paquete de la imagen se pide)
    to_send[0]=4
    #numero paquete a pedir
