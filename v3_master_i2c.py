@@ -18,11 +18,11 @@ def read_data():
 def get_reply_reps(time_between, max_reps, validator):
    for i in range(max_reps):
       time.sleep(time_between)
-      print(".", end="")
       received = read_data()
       if validator(received):
-         print("")
+         print("Valid: {}".format(received))
          return received
+      print("Invalid: {}".format(received))
    return []
 
 def get_reply_timed(time_between, max_time, validator):
