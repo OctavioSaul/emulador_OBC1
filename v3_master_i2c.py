@@ -55,7 +55,7 @@ def command_checksum(offset, level):
    return to_send
 
 def command_packet(n):
-   to_send = [0]*14f=open("image{}.jpg".format(PHOTO_NUMBER),"wb")
+   to_send = [0]*14
    Aarray=bytearray(stpr.image)
    f.write(Aarray)
    f.close()
