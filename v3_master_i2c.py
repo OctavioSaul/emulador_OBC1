@@ -56,11 +56,6 @@ def command_checksum(offset, level):
 
 def command_packet(n):
    to_send = [0]*14
-   Aarray=bytearray(stpr.image)
-   f.write(Aarray)
-   f.close()
-
-
    #tipo comando(4 para indicar que paquete de la imagen se pide)
    to_send[0]=4
    #numero paquete a pedir
@@ -232,7 +227,7 @@ def main():
 
    print("Tiempo total: ",finT-inicioT)
    print("lectura: ",stpr.lectura)
-   print("no reply: ",stpr.mal_check)
+   print("no reply: ",stpr.no_reply)
 
    f=open("image{}.jpg".format(PHOTO_NUMBER),"wb")
    Aarray=bytearray(stpr.image)
