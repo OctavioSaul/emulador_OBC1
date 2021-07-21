@@ -177,7 +177,7 @@ class Stepper:
             print("Got it")
             break
 
-      if !other:
+      if not other:
          print("skipped checksum not returned")
          return
 
