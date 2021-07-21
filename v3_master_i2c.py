@@ -18,9 +18,10 @@ def read_data():
 def get_reply_reps(time_between, max_reps, validator):
    for i in range(max_reps):
       time.sleep(time_between)
-      print(".", sep="")
+      print(".", end="")
       received = read_data()
       if validator(received):
+         print("")
          return received
    return []
 
@@ -28,9 +29,10 @@ def get_reply_timed(time_between, max_time, validator):
    start = time.time()
    while time.time() - start < max_time:
       time.sleep(time_between)
-      print(".", sep="")
+      print(".", end="")
       received = read_data()
       if validator(received):
+         print("")
          return received
    return []
 
@@ -144,7 +146,7 @@ class Stepper:
       return True
 
    def read(self):
-      reply = get_reply_reps(0.001, 10, lambda l: valid_packet(l, self.cont))
+      reply = get_reply_reps(0.001, 1, lambda l: valid_packet(l, self.cont))
       self.lectura += 1
       if reply:
          #guardar datos para exportar la imagen
