@@ -42,7 +42,7 @@ def command_photo():
    return = to_send
 
 def command_checksum(offset, level):
-   to_send = [0]*13
+   to_send = [0]*14
    #comando para pedir checksum
    to_send[0]=5
    #numero de offset
@@ -55,7 +55,7 @@ def command_checksum(offset, level):
    return to_send
 
 def command_packet(n):
-   to_send = [0]*13
+   to_send = [0]*14
    #tipo comando(4 para indicar que paquete de la imagen se pide)
    to_send[0]=4
    #numero paquete a pedir
