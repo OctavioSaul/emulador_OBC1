@@ -4,7 +4,7 @@ import math
 
 SLAVE_ADDRESS = 0x03
 FILL_REGISTER = 0xFF
-PHOTO_NUMBER = 13
+PHOTO_NUMBER = 14
 
 bus = smbus.SMBus(1)
 time.sleep(1)
@@ -133,6 +133,7 @@ class Stepper:
       self.lectura = 0 #contador lectura 
       self.no_reply = 0 #contador checksum incorrecto
       self.image = [0]*(int(img_size)*15) #lista para almacenar los paquetes
+      self.print_counter = 0
       print("total de paquetes: ", img_size)
 
    def next(self):
@@ -147,7 +148,10 @@ class Stepper:
       self.lectura += 1
       if reply:
          #guardar datos para exportar la imagen
-         print(self.cont)
+         self.print_counter += 1
+         if self.print_counter >= 10000:
+            print(self.cont)
+            self.print_counter = 0
          for i in range(15):
             self.image[(self.cont*15)+i]=reply[i]
          self.cont += 1
