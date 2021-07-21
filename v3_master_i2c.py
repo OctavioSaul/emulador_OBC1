@@ -82,7 +82,8 @@ def valid_reply(l):
    return True
 
 def valid_packet(l, n):
-   cs = checksum(l[:15])
+   cs = checksum(l[:15])+n
+   cs &= 0xFF
    if cs == l[0]:
       cs += 1
       cs &= 0xFF
