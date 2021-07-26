@@ -4,7 +4,7 @@ import math
 
 SLAVE_ADDRESS = 0x03
 FILL_REGISTER = 0xFF
-PHOTO_NUMBER = 15
+PHOTO_NUMBER = 19
 
 bus = smbus.SMBus(1)
 time.sleep(1)
@@ -183,10 +183,13 @@ class Stepper:
 
       if not other:
          print("skipped checksum not returned")
-         return
+         return True
+
+      truth_value = True
 
       for i in range(15):
          if own[i]!=other[i]:
+            truth_value = False
             if (offset*15)+(i*separa)+separa2 >= self.img_size:
                #pedir paquete erroneo (offset+i*15**level)
                print("Asking for packet {}".format(offset+i*15**level))
@@ -200,7 +203,7 @@ class Stepper:
                   return
             else:
                self.correct_error(offset+i*15**level,level+1)
-      return    
+      return truth_value
 
 def main():
    inicioT=time.time()
@@ -243,7 +246,8 @@ def main():
 
    print("Attempting to correct")
    start = time.time()
-   stpr.correct_error(0,0)
+   while not stpr.correct_error(0,0):
+      pass
    end = time.time()
 
    f=open("image_corrected{}.jpg".format(PHOTO_NUMBER),"wb")
